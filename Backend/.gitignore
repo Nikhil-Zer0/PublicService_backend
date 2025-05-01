@@ -1,0 +1,18 @@
+.env# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore environment files
+.env
+
+# Ignore FAISS index files (optional if you have them)
+*.faiss
+*.index
+
+# Ignore VSCode settings (optional)
+.vscode/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
