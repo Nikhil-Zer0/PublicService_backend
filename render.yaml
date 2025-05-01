@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: your-service-name
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend.main:app --bind 0.0.0.0:$PORT
