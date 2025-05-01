@@ -115,3 +115,11 @@ async def get_summary(district_name: str, service_type: str):
 @app.get("/")
 async def root():
     return {"message": "Public Services Feedback Analysis API"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        app, 
+        host="0.0.0.0",  # Critical for Render
+        port=int(os.getenv("PORT", 8000))  # Uses Render's $PORT
+    )
