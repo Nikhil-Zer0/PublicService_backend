@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pymongo import MongoClient
@@ -8,6 +8,12 @@ import dotenv
 import traceback
 from gemini import generate_response, generate_summary
 from rag import VectorDB, embed_text
+import firebase_admin
+from firebase_admin import credentials
+
+cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+cred = credentials.Certificate(cred_path)
+firebase_admin.initialize_app(cred)
 
 # Initialize environment and app
 dotenv.load_dotenv()
@@ -35,10 +41,21 @@ class Feedback(BaseModel):
     district_name: str
     service_type: str
     user_feedback: str
+    
+async def verify_token(authorization: str = Header(...)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(401, "Missing Bearer token")
+    id_token = authorization.split(" ")[1]
+    try:
+        decoded = admin_auth.verify_id_token(id_token)
+        return decoded  # contains uid, email, etc.
+    except Exception:
+        raise HTTPException(401, "Invalid or expired token")
 
 # Routes
 @app.post("/submit_feedback/")
-async def submit_feedback(feedback: Feedback):
+async def submit_feedback(feedback: Feedback,
+        user=Depends(verify_token)):
     try:
         # Generate embedding
         embedding = embed_text(feedback.user_feedback)
