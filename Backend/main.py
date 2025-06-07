@@ -11,13 +11,14 @@ from rag import VectorDB, embed_text
 import firebase_admin
 from firebase_admin import credentials
 
+dotenv.load_dotenv()
+app = FastAPI()
+
 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 cred = credentials.Certificate(cred_path)
 firebase_admin.initialize_app(cred)
 
 # Initialize environment and app
-dotenv.load_dotenv()
-app = FastAPI()
 
 # CORS Configuration
 app.add_middleware(
