@@ -47,7 +47,7 @@ async def verify_token(authorization: str = Header(...)):
         raise HTTPException(401, "Missing Bearer token")
     id_token = authorization.split(" ")[1]
     try:
-        decoded = admin_auth.verify_id_token(id_token)
+        decoded = firebase_admin.auth.verify_id_token(id_token)
         return decoded  # contains uid, email, etc.
     except Exception:
         raise HTTPException(401, "Invalid or expired token")
