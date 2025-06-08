@@ -9,7 +9,7 @@ import traceback
 from gemini import generate_response, generate_summary
 from rag import VectorDB, embed_text
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, auth
 # import psutil
 
 dotenv.load_dotenv()
@@ -46,13 +46,32 @@ class Feedback(BaseModel):
     
 async def verify_token(authorization: str = Header(...)):
     if not authorization.startswith("Bearer "):
-        raise HTTPException(401, "Missing Bearer token")
-    id_token = authorization.split(" ")[1]
+        raise HTTPException(status_code=401, detail="Missing or malformed Bearer token in 'Authorization' header.")
+
+    # Extract the token from the header
     try:
-        decoded = firebase_admin.auth.verify_id_token(id_token)
-        return decoded  # contains uid, email, etc.
-    except Exception:
-        raise HTTPException(401, "Invalid or expired token")
+        id_token = authorization.split(" ")[1]
+    except IndexError:
+        raise HTTPException(status_code=401, detail="Bearer token is missing after 'Bearer' prefix.")
+
+    # Attempt to verify the token
+    try:
+        decoded_token = auth.verify_id_token(id_token)
+        return decoded_token  # contains uid, email, etc.
+    except auth.ExpiredIdTokenError:
+        raise HTTPException(status_code=401, detail="Firebase token has expired.")
+    except auth.RevokedIdTokenError:
+        raise HTTPException(status_code=401, detail="Firebase token has been revoked.")
+    except auth.InvalidIdTokenError:
+        raise HTTPException(status_code=401, detail="Firebase token is invalid.")
+    except auth.CertificateFetchError:
+        raise HTTPException(status_code=503, detail="Failed to fetch Firebase public keys for verification.")
+    except Exception as e:
+        error_trace = traceback.format_exc()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error during Firebase token verification: {str(e)}\n{error_trace}"
+        )
 
 # Routes
 @app.post("/submit_feedback/")
