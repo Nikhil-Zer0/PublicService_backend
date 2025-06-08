@@ -10,7 +10,7 @@ from gemini import generate_response, generate_summary
 from rag import VectorDB, embed_text
 import firebase_admin
 from firebase_admin import credentials
-# import psutil
+import psutil
 
 dotenv.load_dotenv()
 app = FastAPI()
@@ -56,8 +56,7 @@ async def verify_token(authorization: str = Header(...)):
 
 # Routes
 @app.post("/submit_feedback/")
-async def submit_feedback(feedback: Feedback,
-        user=Depends(verify_token)):
+async def submit_feedback(feedback: Feedback, user=Depends(verify_token)):
     try:
         # Generate embedding
         embedding = embed_text(feedback.user_feedback)
@@ -92,7 +91,7 @@ async def submit_feedback(feedback: Feedback,
         raise HTTPException(500, detail=f"Feedback processing failed: {str(e)}")
 
 @app.get("/summary/{district_name}/{service_type}")
-async def get_summary(district_name: str, service_type: str):
+async def get_summary(district_name: str, service_type: str, user=Depends(verify_token)):
     try:
         # Get main feedbacks
         main_feedbacks = list(feedback_collection.find({
@@ -131,11 +130,11 @@ async def get_summary(district_name: str, service_type: str):
         traceback.print_exc()
         raise HTTPException(500, detail=f"Summary generation failed: {str(e)}")
     
-# @app.get("/memory")
-# async def memory_usage():
-#     process = psutil.Process(os.getpid())
-#     mem = process.memory_info().rss / (1024 ** 2)  # MB
-#     return {"memory_usage_mb": mem}
+@app.get("/memory")
+async def memory_usage():
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info().rss / (1024 ** 2)  # MB
+    return {"memory_usage_mb": mem}
 
 @app.get("/")
 async def root():
