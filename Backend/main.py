@@ -10,7 +10,7 @@ from gemini import generate_response, generate_summary
 from rag import VectorDB, embed_text
 import firebase_admin
 from firebase_admin import credentials
-import psutil
+# import psutil
 
 dotenv.load_dotenv()
 app = FastAPI()
@@ -130,11 +130,11 @@ async def get_summary(district_name: str, service_type: str, user=Depends(verify
         traceback.print_exc()
         raise HTTPException(500, detail=f"Summary generation failed: {str(e)}")
     
-@app.get("/memory")
-async def memory_usage():
-    process = psutil.Process(os.getpid())
-    mem = process.memory_info().rss / (1024 ** 2)  # MB
-    return {"memory_usage_mb": mem}
+# @app.get("/memory")
+# async def memory_usage():
+#     process = psutil.Process(os.getpid())
+#     mem = process.memory_info().rss / (1024 ** 2)  # MB
+#     return {"memory_usage_mb": mem}
 
 @app.get("/")
 async def root():
