@@ -1,3 +1,4 @@
+import json
 from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -15,8 +16,16 @@ from firebase_admin import credentials, auth
 dotenv.load_dotenv()
 app = FastAPI()
 
+cred_json = os.getenv("FIREBASE_CREDENTIALS_JSON")
 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-cred = credentials.Certificate(cred_path)
+
+if cred_json:
+    cred = credentials.Certificate(json.loads(cred_json))
+elif cred_path:
+    cred = credentials.Certificate(cred_path)
+else:
+    raise RuntimeError("Firebase credentials not found")
+
 firebase_admin.initialize_app(cred)
 
 # Initialize environment and app
